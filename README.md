@@ -1,5 +1,10 @@
 # FileSetu
 
+**PC ↔ Android file transfer without internet.** The phone app runs a small web server; the PC only needs a
+browser. Works over the phone's hotspot, the same Wi-Fi, or USB tethering. PIN-protected, Hindi/English UI.
+
+**Download:** [Releases](../../releases) → `FileSetu-x.y.z.apk` (Android 8.0+).
+
 PC ↔ मोबाइल फ़ाइल ट्रांसफ़र, बिना internet। फ़ोन पर ऐप एक छोटा web server चलाता है;
 PC पर सिर्फ़ browser (Chrome/Edge) चाहिए। Hotspot, एक ही Wi-Fi, या USB tethering से चलता है।
 
@@ -25,3 +30,6 @@ PC page को फ़ोन के बिना जाँचने के लि
 - 0.1.0 (Stage 1): start/stop, पता + PIN, PC→फ़ोन upload, फ़ोन→PC download (picker + Share), progress।
 - 0.2.0 (Stage 2): सब ZIP में, text/link दोनों तरफ़, history (सहेजी रहती है), 15 मिनट idle पर अपने-आप बंद, हिंदी/English, फ़ाइल/text आने पर notification।
 - आगे (Stage 3): folder upload, टूटा transfer फिर से शुरू, ऐप से hotspot।
+
+## License
+GPL-3.0 — see [LICENSE](LICENSE).
