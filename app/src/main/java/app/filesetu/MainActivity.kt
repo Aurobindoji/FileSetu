@@ -165,14 +165,14 @@ class MainActivity : ComponentActivity() {
         val en = lang == "en"
         fun t(hi: String, enText: String) = if (en) enText else hi
 
-        var addrs by remember { mutableStateOf(localAddresses(this)) }
+        var addrs by remember { mutableStateOf(localAddresses(this@MainActivity)) }
         var battery by remember { mutableStateOf(batteryOptimized()) }
         var draft by remember { mutableStateOf("") }
         val timeFmt = remember { SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()) }
 
         LaunchedEffect(Unit) {
             while (true) {
-                addrs = localAddresses(this)
+                addrs = localAddresses(this@MainActivity)
                 battery = batteryOptimized()
                 delay(3000)
             }
