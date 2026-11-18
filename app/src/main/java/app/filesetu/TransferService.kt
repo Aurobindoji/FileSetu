@@ -10,7 +10,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import java.net.ServerSocket
@@ -37,6 +39,20 @@ class TransferService : Service() {
     private var server: TransferServer? = null
     private var wifiLock: WifiManager.WifiLock? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private val handler = Handler(Looper.getMainLooper())
+
+    /** Stops the server after IDLE_MINUTES without any PC activity (saves battery, closes access). */
+    private val idleCheck = object : Runnable {
+        override fun run() {
+            val idleMs = System.currentTimeMillis() - Store.lastActivity
+            if (server != null && Store.activeTransfers.get() == 0 && idleMs > Store.IDLE_MINUTES * 60_000L) {
+                Store.status.value = tr("${Store.IDLE_MINUTES} मिनट कोई काम नहीं हुआ — अपने-आप बंद", "Idle ${Store.IDLE_MINUTES} min — stopped")
+                stopSelf()
+                return
+            }
+            handler.postDelayed(this, 30_000)
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -45,6 +61,7 @@ class TransferService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+        Store.init(this)
         if (server == null) {
             val port = freePort()
             Store.pin.value = "%04d".format(SecureRandom().nextInt(10000))
@@ -54,11 +71,14 @@ class TransferService : Service() {
             try {
                 server = TransferServer(applicationContext).also { it.start(port) }
                 Store.error.value = null
-                Store.status.value = "चालू — PC का इंतज़ार"
+                Store.status.value = tr("चालू — PC का इंतज़ार", "On — waiting for PC")
                 Store.running.value = true
+                Store.touch()
                 takeLocks()
+                handler.removeCallbacks(idleCheck)
+                handler.postDelayed(idleCheck, 30_000)
             } catch (e: Exception) {
-                Store.error.value = "Server शुरू नहीं हुआ: ${e.message}"
+                Store.error.value = tr("Server शुरू नहीं हुआ: ", "Server did not start: ") + e.message
                 stopSelf()
             }
         } else {
@@ -68,19 +88,19 @@ class TransferService : Service() {
     }
 
     override fun onDestroy() {
+        handler.removeCallbacks(idleCheck)
         val s = server
         server = null
         Thread { s?.stop() }.start()
         releaseLocks()
         Store.running.value = false
         Store.token = ""
-        Store.status.value = ""
         super.onDestroy()
     }
 
     /** Android 15+: data-sync services get a time limit; stop cleanly when it is reached. */
     override fun onTimeout(startId: Int, fgsType: Int) {
-        Store.status.value = "समय-सीमा पूरी — फिर से चालू करें"
+        Store.status.value = tr("समय-सीमा पूरी — फिर से चालू करें", "Time limit reached — start again")
         stopSelf()
     }
 
@@ -96,7 +116,7 @@ class TransferService : Service() {
         val nm = getSystemService(NotificationManager::class.java)
         if (nm.getNotificationChannel(CHANNEL) == null) {
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL, "फ़ाइल ट्रांसफ़र", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(CHANNEL, tr("फ़ाइल ट्रांसफ़र", "File transfer"), NotificationManager.IMPORTANCE_LOW)
             )
         }
         val open = PendingIntent.getActivity(
@@ -107,14 +127,14 @@ class TransferService : Service() {
             this, 1, Intent(this, TransferService::class.java).setAction(ACTION_STOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val addr = localAddresses().firstOrNull()?.let { "http://${it.ip}:${Store.port.value}" } ?: "पता ऐप में देखें"
+        val addr = localAddresses().firstOrNull()?.let { "http://${it.ip}:${Store.port.value}" } ?: tr("पता ऐप में देखें", "See address in app")
         val n: Notification = Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_launcher_fg)
-            .setContentTitle("FileSetu चालू है — PIN ${Store.pin.value}")
+            .setContentTitle(tr("FileSetu चालू है — PIN ", "FileSetu is on — PIN ") + Store.pin.value)
             .setContentText(addr)
             .setContentIntent(open)
             .setOngoing(true)
-            .addAction(Notification.Action.Builder(null, "बंद करें", stop).build())
+            .addAction(Notification.Action.Builder(null, tr("बंद करें", "Stop"), stop).build())
             .build()
         if (Build.VERSION.SDK_INT >= 29) {
             startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)

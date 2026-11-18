@@ -23,4 +23,5 @@ PC page को फ़ोन के बिना जाँचने के लि
 
 ## Stage
 - 0.1.0 (Stage 1): start/stop, पता + PIN, PC→फ़ोन upload, फ़ोन→PC download (picker + Share), progress।
-- आगे (Stage 2): ZIP, text box, history, idle auto-stop, हिंदी/English।
+- 0.2.0 (Stage 2): सब ZIP में, text/link दोनों तरफ़, history (सहेजी रहती है), 15 मिनट idle पर अपने-आप बंद, हिंदी/English, फ़ाइल/text आने पर notification।
+- आगे (Stage 3): folder upload, टूटा transfer फिर से शुरू, ऐप से hotspot।

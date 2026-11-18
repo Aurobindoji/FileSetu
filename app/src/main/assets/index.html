@@ -8,13 +8,15 @@
   :root { --blue:#1565c0; --bg:#f4f6f9; --card:#fff; --text:#1d2433; --muted:#6b7385; --line:#e3e7ee; --ok:#2e7d32; --err:#c62828; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: "Segoe UI", "Nirmala UI", "Mangal", sans-serif; background:var(--bg); color:var(--text); }
-  header { background:var(--blue); color:#fff; padding:14px 20px; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  header { background:var(--blue); color:#fff; padding:12px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
   header h1 { margin:0; font-size:22px; }
-  header span { opacity:.85; font-size:14px; }
+  header span { opacity:.85; font-size:14px; flex:1; }
+  header button { background:transparent; border:1px solid #ffffff99; color:#fff; }
   main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:1fr 1fr; }
   @media (max-width:800px) { main { grid-template-columns:1fr; } }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
   .card h2 { margin:0 0 12px; font-size:18px; }
+  .wide { grid-column:1 / -1; }
   #drop { border:2px dashed #9fb3d1; border-radius:10px; padding:30px 12px; text-align:center; cursor:pointer; color:var(--muted); transition:.15s; }
   #drop.over { background:#e3f0ff; border-color:var(--blue); color:var(--blue); }
   #drop b { display:block; font-size:17px; color:var(--text); margin-bottom:6px; }
@@ -26,52 +28,115 @@
   .bar i { display:block; height:100%; width:0; background:var(--blue); transition:width .2s; }
   .ok { color:var(--ok); } .err { color:var(--err); }
   a.btn, button { background:var(--blue); color:#fff; border:0; border-radius:6px; padding:7px 14px; font-size:14px; text-decoration:none; cursor:pointer; font-family:inherit; white-space:nowrap; }
-  button.ghost { background:transparent; color:var(--blue); border:1px solid var(--blue); }
+  button.ghost, a.ghost { background:transparent; color:var(--blue); border:1px solid var(--blue); }
+  button.small { padding:4px 10px; font-size:13px; }
   .empty { color:var(--muted); font-size:14px; padding:8px 0; }
-  #login { max-width:360px; margin:60px auto; text-align:center; }
+  #login { max-width:380px; margin:60px auto; text-align:center; }
   #login input { font-size:28px; letter-spacing:10px; width:180px; text-align:center; padding:8px; border:2px solid var(--line); border-radius:8px; margin:12px 0; }
-  #login input:focus { outline:none; border-color:var(--blue); }
+  #login input:focus, textarea:focus { outline:none; border-color:var(--blue); }
   .hidden { display:none !important; }
-  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; }
   .head h2 { margin:0; }
+  textarea { width:100%; min-height:64px; font:inherit; font-size:15px; padding:8px; border:2px solid var(--line); border-radius:8px; resize:vertical; }
+  .note { padding:9px 0; border-bottom:1px solid var(--line); display:flex; gap:10px; align-items:flex-start; }
+  .note:last-child { border-bottom:0; }
+  .note .txt { flex:1; white-space:pre-wrap; word-break:break-word; }
+  .note .who { font-size:11px; color:var(--muted); }
+  .note .who.pc { color:var(--blue); }
 </style>
 </head>
 <body>
-<header><h1>FileSetu</h1><span id="device">PC ↔ मोबाइल फ़ाइल ट्रांसफ़र</span></header>
+<header>
+  <h1>FileSetu</h1><span id="device" data-t="tagline"></span>
+  <button id="langBtn" class="small"></button>
+</header>
 
 <div id="login" class="card hidden">
-  <h2>मोबाइल पर दिख रहा PIN डालें</h2>
+  <h2 data-t="enterPin"></h2>
   <input id="pin" inputmode="numeric" maxlength="4" autocomplete="off" autofocus>
-  <div><button id="go">जुड़ें</button></div>
+  <div><button id="go" data-t="connect"></button></div>
   <p id="loginMsg" class="err"></p>
 </div>
 
 <main id="app" class="hidden">
   <section class="card">
-    <h2>⬆ मोबाइल को भेजें</h2>
-    <div id="drop">
-      <b>फ़ाइलें यहाँ खींचकर छोड़ें</b>
-      या यहाँ क्लिक करके चुनें (एक साथ कई फ़ाइलें)
-    </div>
+    <h2 data-t="toPhone"></h2>
+    <div id="drop"><b data-t="dropHere"></b><span data-t="orClick"></span></div>
     <input id="picker" type="file" multiple class="hidden">
     <div id="queue"></div>
   </section>
 
   <section class="card">
-    <div class="head"><h2>⬇ मोबाइल से लें</h2><button id="all" class="ghost hidden">सब डाउनलोड करें</button></div>
-    <div id="outbox"><div class="empty">लोड हो रहा है…</div></div>
-    <h2 style="margin-top:22px">मोबाइल को भेजी जा चुकी</h2>
-    <div id="received"><div class="empty">अभी कोई नहीं।</div></div>
+    <div class="head"><h2 data-t="fromPhone"></h2><a id="zip" class="btn ghost hidden" href="/api/zip" data-t="zipAll"></a></div>
+    <div id="outbox"></div>
+    <h2 style="margin-top:22px" data-t="sentToPhone"></h2>
+    <div id="received"></div>
+  </section>
+
+  <section class="card wide">
+    <h2 data-t="textTitle"></h2>
+    <textarea id="txt" data-tp="textPh"></textarea>
+    <div style="margin:8px 0 4px; display:flex; gap:8px; align-items:center">
+      <button id="sendTxt" data-t="sendToPhone"></button><span class="sub" data-t="ctrlEnter"></span>
+    </div>
+    <div id="notes"></div>
   </section>
 </main>
 
 <script>
+const I18N = {
+  hi: {
+    tagline: "PC ↔ मोबाइल फ़ाइल ट्रांसफ़र", enterPin: "मोबाइल पर दिख रहा PIN डालें", connect: "जुड़ें",
+    toPhone: "⬆ मोबाइल को भेजें", dropHere: "फ़ाइलें यहाँ खींचकर छोड़ें", orClick: "या यहाँ क्लिक करके चुनें (एक साथ कई फ़ाइलें)",
+    fromPhone: "⬇ मोबाइल से लें", zipAll: "सब ZIP में", sentToPhone: "मोबाइल को भेजी जा चुकी",
+    textTitle: "Text / Link (दोनों तरफ़)", textPh: "नंबर, link या छोटा नोट लिखें/paste करें…", sendToPhone: "मोबाइल को भेजें",
+    ctrlEnter: "Ctrl+Enter से भी भेज सकते हैं", download: "डाउनलोड", copy: "Copy", copied: "✓ Copy",
+    none: "अभी कोई नहीं।", noOutbox: "मोबाइल पर \"+ फ़ाइल चुनें\" या Share → FileSetu से फ़ाइल जोड़ें, यहाँ दिख जाएगी।",
+    noNotes: "अभी कोई text नहीं।", fromPc: "PC से", fromPhoneW: "फ़ोन से", connected: "जुड़ा: ",
+    lost: "⚠ मोबाइल से संपर्क टूटा — ऐप चालू है?", noContact: "मोबाइल से संपर्क नहीं हो पा रहा — ऐप में \"चालू करें\" दबाएँ",
+    need4: "4 अंक डालें", badPin: "गलत PIN", wait: "कई गलत कोशिशें — 1 मिनट बाद", queued: "कतार में",
+    sent: "✓ भेज दी", renamed: "नाम: ", failed: "✗ नहीं गई", broken: "✗ संपर्क टूट गया — फिर से भेजें", pinAgain: "PIN फिर डालें",
+    idle: m => `${m} मिनट कुछ न होने पर मोबाइल server बंद कर देगा`,
+  },
+  en: {
+    tagline: "PC ↔ phone file transfer", enterPin: "Enter the PIN shown on the phone", connect: "Connect",
+    toPhone: "⬆ Send to phone", dropHere: "Drop files here", orClick: "or click to choose (several at once)",
+    fromPhone: "⬇ Get from phone", zipAll: "All as ZIP", sentToPhone: "Sent to phone",
+    textTitle: "Text / Link (both ways)", textPh: "Type or paste a number, link or short note…", sendToPhone: "Send to phone",
+    ctrlEnter: "Ctrl+Enter also sends", download: "Download", copy: "Copy", copied: "✓ Copied",
+    none: "Nothing yet.", noOutbox: "On the phone tap \"+ Choose files\" or Share → FileSetu; files show up here.",
+    noNotes: "No text yet.", fromPc: "From PC", fromPhoneW: "From phone", connected: "Connected: ",
+    lost: "⚠ Lost contact with the phone — is the app on?", noContact: "Cannot reach the phone — tap \"Start\" in the app",
+    need4: "Enter 4 digits", badPin: "Wrong PIN", wait: "Too many wrong tries — wait 1 minute", queued: "queued",
+    sent: "✓ Sent", renamed: "name: ", failed: "✗ Failed", broken: "✗ Connection lost — send again", pinAgain: "Enter PIN again",
+    idle: m => `The phone stops the server after ${m} idle minutes`,
+  },
+};
+let lang = "hi";
+try { lang = localStorage.getItem("fs-lang") || "hi"; } catch {}
+const T = k => (I18N[lang] || I18N.hi)[k];
+
 const $ = s => document.querySelector(s);
 const fmt = b => !b || b <= 0 ? "—" : b < 1024 ? b + " B" : b < 1048576 ? (b/1024).toFixed(1) + " KB"
   : b < 1073741824 ? (b/1048576).toFixed(1) + " MB" : (b/1073741824).toFixed(2) + " GB";
-const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const hhmm = t => new Date(t).toLocaleString(lang === "en" ? "en-IN" : "hi-IN", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
 
-let busy = 0, queue = [], running = false, outFiles = [];
+let busy = 0, queue = [], running = false, last = null, deviceName = "";
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach(e => { e.textContent = T(e.dataset.t); });
+  document.querySelectorAll("[data-tp]").forEach(e => { e.placeholder = T(e.dataset.tp); });
+  $("#langBtn").textContent = lang === "en" ? "हिंदी" : "English";
+  if (deviceName) $("#device").textContent = T("connected") + deviceName;
+  if (last) render(last);
+}
+$("#langBtn").onclick = () => {
+  lang = lang === "en" ? "hi" : "en";
+  try { localStorage.setItem("fs-lang", lang); } catch {}
+  applyLang();
+};
 
 function showLogin(msg) {
   $("#app").classList.add("hidden"); $("#login").classList.remove("hidden");
@@ -81,11 +146,12 @@ function showApp() { $("#login").classList.add("hidden"); $("#app").classList.re
 
 async function login() {
   const pin = $("#pin").value.trim();
-  if (pin.length !== 4) { $("#loginMsg").textContent = "4 अंक डालें"; return; }
+  if (pin.length !== 4) { $("#loginMsg").textContent = T("need4"); return; }
   try {
     const r = await fetch("/api/login?pin=" + encodeURIComponent(pin), { method: "POST" });
-    if (r.ok) { showApp(); refresh(); } else { showLogin(await r.text() || "गलत PIN"); }
-  } catch { $("#loginMsg").textContent = "मोबाइल से संपर्क नहीं हो पा रहा"; }
+    if (r.ok) { showApp(); refresh(); }
+    else showLogin(r.status === 429 ? T("wait") : T("badPin"));
+  } catch { $("#loginMsg").textContent = T("noContact"); }
 }
 $("#go").onclick = login;
 $("#pin").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
@@ -94,32 +160,64 @@ async function refresh() {
   let r;
   try { r = await fetch("/api/state", { cache: "no-store" }); }
   catch {
-    $("#device").textContent = "⚠ मोबाइल से संपर्क टूटा — ऐप चालू है?";
-    if ($("#app").classList.contains("hidden")) showLogin("मोबाइल से संपर्क नहीं हो पा रहा — ऐप में \"चालू करें\" दबाएँ");
+    $("#device").textContent = T("lost");
+    if ($("#app").classList.contains("hidden")) showLogin(T("noContact"));
     return;
   }
-  if (r.status === 401) { showLogin(); return; }
+  if (r.status === 401) { if ($("#login").classList.contains("hidden")) showLogin(); return; }
   const s = await r.json();
   showApp();
-  $("#device").textContent = "जुड़ा: " + s.device;
-  outFiles = s.outbox;
-  $("#outbox").innerHTML = s.outbox.length ? s.outbox.map(f =>
-    `<div class="row"><div class="name" title="${esc(f.name)}">${esc(f.name)}<div class="sub">${fmt(f.size)}</div></div>
-     <a class="btn" href="/api/file/${encodeURIComponent(f.id)}" download>डाउनलोड</a></div>`).join("")
-    : `<div class="empty">मोबाइल पर "+ फ़ाइल चुनें" या Share → FileSetu से फ़ाइल जोड़ें, यहाँ दिख जाएगी।</div>`;
-  $("#all").classList.toggle("hidden", s.outbox.length < 2);
-  $("#received").innerHTML = s.received.length ? s.received.map(f =>
-    `<div class="row"><div class="name">${esc(f.name)}</div><span class="sub">${fmt(f.size)}</span></div>`).join("")
-    : `<div class="empty">अभी कोई नहीं।</div>`;
+  deviceName = s.device;
+  $("#device").textContent = T("connected") + s.device;
+  $("#device").title = T("idle")(s.idleMinutes);
+  last = s;
+  render(s);
 }
 
-$("#all").onclick = () => {
-  outFiles.forEach((f, i) => setTimeout(() => {
-    const a = document.createElement("a");
-    a.href = "/api/file/" + encodeURIComponent(f.id); a.download = f.name;
-    document.body.appendChild(a); a.click(); a.remove();
-  }, i * 700));
-};
+function render(s) {
+  $("#outbox").innerHTML = s.outbox.length ? s.outbox.map(f =>
+    `<div class="row"><div class="name" title="${esc(f.name)}">${esc(f.name)}<div class="sub">${fmt(f.size)}</div></div>
+     <a class="btn" href="/api/file/${encodeURIComponent(f.id)}" download>${T("download")}</a></div>`).join("")
+    : `<div class="empty">${T("noOutbox")}</div>`;
+  $("#zip").classList.toggle("hidden", s.outbox.length < 2);
+  $("#received").innerHTML = s.received.length ? s.received.map(f =>
+    `<div class="row"><div class="name" title="${esc(f.name)}">${esc(f.name)}<div class="sub">${hhmm(f.time)}</div></div><span class="sub">${fmt(f.size)}</span></div>`).join("")
+    : `<div class="empty">${T("none")}</div>`;
+  const sig = JSON.stringify(s.notes) + lang;
+  if (sig !== render.notesSig) {   // keep the list still while the user is selecting text
+    render.notesSig = sig;
+    $("#notes").innerHTML = s.notes.length ? s.notes.map(n =>
+      `<div class="note"><div class="txt"><div class="who ${n.fromPc ? "pc" : ""}">${n.fromPc ? T("fromPc") : T("fromPhoneW")} · ${hhmm(n.time)}</div>${esc(n.text)}</div>
+       <button class="small ghost" data-copy="${esc(n.id)}">${T("copy")}</button>
+       <button class="small ghost" data-del="${esc(n.id)}">✕</button></div>`).join("")
+      : `<div class="empty">${T("noNotes")}</div>`;
+  }
+}
+
+$("#notes").addEventListener("click", async e => {
+  const c = e.target.closest("[data-copy]"), d = e.target.closest("[data-del]");
+  if (c) {
+    const n = (last?.notes || []).find(x => x.id === c.dataset.copy);
+    if (!n) return;
+    try { await navigator.clipboard.writeText(n.text); }
+    catch {   // http pages may not get the clipboard API: fall back to a hidden textarea
+      const ta = document.createElement("textarea"); ta.value = n.text; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); ta.remove();
+    }
+    c.textContent = T("copied"); setTimeout(() => c.textContent = T("copy"), 1200);
+  }
+  if (d) { await fetch("/api/text/" + encodeURIComponent(d.dataset.del), { method: "DELETE" }); refresh(); }
+});
+
+async function sendText() {
+  const v = $("#txt").value.trim();
+  if (!v) return;
+  const r = await fetch("/api/text", { method: "POST", body: v, headers: { "Content-Type": "text/plain; charset=utf-8" } }).catch(() => null);
+  if (r && r.ok) { $("#txt").value = ""; refresh(); }
+  else if (r && r.status === 401) showLogin(T("pinAgain"));
+}
+$("#sendTxt").onclick = sendText;
+$("#txt").addEventListener("keydown", e => { if (e.key === "Enter" && e.ctrlKey) sendText(); });
 
 // ----- upload -----
 const drop = $("#drop");
@@ -128,7 +226,6 @@ $("#picker").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
 ["dragenter","dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave","drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
-// dropping anywhere else should not open the file in the browser
 window.addEventListener("dragover", e => e.preventDefault());
 window.addEventListener("drop", e => { e.preventDefault(); if (e.target !== drop && !drop.contains(e.target)) addFiles(e.dataTransfer.files); });
 
@@ -138,7 +235,7 @@ function addFiles(list) {
     const el = document.createElement("div");
     el.className = "row";
     el.innerHTML = `<div class="name">${esc(file.name)}<div class="bar"><i></i></div>
-      <div class="sub">${fmt(file.size)} — कतार में</div></div>`;
+      <div class="sub">${fmt(file.size)} — ${T("queued")}</div></div>`;
     $("#queue").prepend(el);
     queue.push({ file, el });
   }
@@ -162,7 +259,7 @@ function pump() {
   };
   const done = (ok, msg) => {
     busy--; running = false;
-    bar.style.width = ok ? "100%" : bar.style.width;
+    if (ok) bar.style.width = "100%";
     bar.style.background = ok ? "var(--ok)" : "var(--err)";
     sub.className = "sub " + (ok ? "ok" : "err"); sub.textContent = msg;
     refresh(); pump();
@@ -170,16 +267,17 @@ function pump() {
   xhr.onload = () => {
     if (xhr.status === 200) {
       let n = file.name; try { n = JSON.parse(xhr.responseText).name; } catch {}
-      done(true, `✓ भेज दी (${fmt(file.size)})` + (n !== file.name ? ` — नाम: ${n}` : ""));
-    } else if (xhr.status === 401) { done(false, "PIN फिर डालें"); showLogin(); }
-    else done(false, "✗ नहीं गई (" + xhr.status + ")");
+      done(true, `${T("sent")} (${fmt(file.size)})` + (n !== file.name ? ` — ${T("renamed")}${n}` : ""));
+    } else if (xhr.status === 401) { done(false, T("pinAgain")); showLogin(); }
+    else done(false, `${T("failed")} (${xhr.status})`);
   };
-  xhr.onerror = () => done(false, "✗ संपर्क टूट गया — फिर से भेजें");
+  xhr.onerror = () => done(false, T("broken"));
   xhr.send(file);
 }
 
 window.addEventListener("beforeunload", e => { if (busy || queue.length) { e.preventDefault(); e.returnValue = ""; } });
 
+applyLang();
 refresh();
 setInterval(() => { if (!$("#app").classList.contains("hidden")) refresh(); }, 2500);
 </script>
