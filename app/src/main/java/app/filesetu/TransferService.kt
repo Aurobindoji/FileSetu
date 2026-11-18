@@ -127,7 +127,7 @@ class TransferService : Service() {
             this, 1, Intent(this, TransferService::class.java).setAction(ACTION_STOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val addr = localAddresses().firstOrNull()?.let { "http://${it.ip}:${Store.port.value}" } ?: tr("पता ऐप में देखें", "See address in app")
+        val addr = localAddresses(this).firstOrNull()?.let { "http://${it.ip}:${Store.port.value}" } ?: tr("पता ऐप में देखें", "See address in app")
         val n: Notification = Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_launcher_fg)
             .setContentTitle(tr("FileSetu चालू है — PIN ", "FileSetu is on — PIN ") + Store.pin.value)
