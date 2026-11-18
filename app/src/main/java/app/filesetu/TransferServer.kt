@@ -9,6 +9,8 @@ import io.ktor.http.content.OutgoingContent
 import io.ktor.http.withCharset
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.install
+import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
@@ -64,6 +66,7 @@ class TransferServer(private val ctx: Context) {
     }
 
     private fun Application.module() {
+        install(AutoHeadResponse)   // download managers ask HEAD first for name/size
         routing {
             get("/") {
                 call.response.header(HttpHeaders.CacheControl, "no-store")
@@ -109,15 +112,21 @@ class TransferServer(private val ctx: Context) {
                 )
             }
 
-            get("/api/file/{id}") {
+            // The file name is part of the URL so every browser / download manager saves it with the right name.
+            get("/api/file/{id}/{name?}") {
                 if (!call.authed()) { call.respondText("", status = HttpStatusCode.Unauthorized); return@get }
                 val f = Store.outbox.value.find { it.id == call.parameters["id"] }
                 if (f == null) { call.respondText("not found", status = HttpStatusCode.NotFound); return@get }
                 call.response.header(HttpHeaders.ContentDisposition, attachment(f.name))
-                call.respond(UriContent(ctx, f))
+                val range = if (f.size > 0) parseRange(call.request.headers[HttpHeaders.Range], f.size) else null
+                if (f.size > 0) call.response.header(HttpHeaders.AcceptRanges, "bytes")
+                if (range != null) {
+                    call.response.header(HttpHeaders.ContentRange, "bytes ${range.first}-${range.last}/${f.size}")
+                }
+                call.respond(UriContent(ctx, f, range))
             }
 
-            get("/api/zip") {
+            get("/api/zip/{name?}") {
                 if (!call.authed()) { call.respondText("", status = HttpStatusCode.Unauthorized); return@get }
                 val files = Store.outbox.value
                 if (files.isEmpty()) { call.respondText("empty", status = HttpStatusCode.NotFound); return@get }
@@ -194,9 +203,15 @@ class TransferServer(private val ctx: Context) {
     }
 
     /** Streams one outbox file to the PC without loading it in memory. */
-    private class UriContent(private val ctx: Context, private val f: OutFile) : OutgoingContent.WriteChannelContent() {
+    private class UriContent(
+        private val ctx: Context,
+        private val f: OutFile,
+        private val range: LongRange?,
+    ) : OutgoingContent.WriteChannelContent() {
         override val contentType: ContentType = ContentType.Application.OctetStream
-        override val contentLength: Long? = f.size.takeIf { it > 0 }
+        override val status: HttpStatusCode? = if (range != null) HttpStatusCode.PartialContent else null
+        override val contentLength: Long? =
+            range?.let { it.last - it.first + 1 } ?: f.size.takeIf { it > 0 }
 
         override suspend fun writeTo(channel: ByteWriteChannel) {
             val input = withContext(Dispatchers.IO) { ctx.contentResolver.openInputStream(f.uri) }
@@ -206,11 +221,15 @@ class TransferServer(private val ctx: Context) {
                 val buf = ByteArray(256 * 1024)
                 var sent = 0L
                 var lastUi = 0L
+                var left = contentLength ?: Long.MAX_VALUE
                 input.use {
-                    while (true) {
-                        val n = withContext(Dispatchers.IO) { it.read(buf) }
+                    if (range != null && range.first > 0) withContext(Dispatchers.IO) { skipFully(it, range.first) }
+                    while (left > 0) {
+                        val want = minOf(buf.size.toLong(), left).toInt()
+                        val n = withContext(Dispatchers.IO) { it.read(buf, 0, want) }
                         if (n < 0) break
                         channel.writeFully(buf, 0, n)
+                        left -= n
                         sent += n
                         val now = System.currentTimeMillis()
                         if (now - lastUi > 500) {
@@ -288,6 +307,30 @@ class TransferServer(private val ctx: Context) {
     }
 
     companion object {
+        /** Single "bytes=a-b", "bytes=a-" or "bytes=-n" range; null = send the whole file. */
+        fun parseRange(h: String?, size: Long): LongRange? {
+            val m = Regex("""^bytes=(\d*)-(\d*)$""").find(h?.trim() ?: return null) ?: return null
+            val (a, b) = m.destructured
+            val r = when {
+                a.isEmpty() && b.isEmpty() -> return null
+                a.isEmpty() -> (size - b.toLong()).coerceAtLeast(0)..(size - 1)
+                else -> a.toLong()..(if (b.isEmpty()) size - 1 else minOf(b.toLong(), size - 1))
+            }
+            return if (r.first in 0 until size && r.last >= r.first) r else null
+        }
+
+        fun skipFully(input: java.io.InputStream, n: Long) {
+            var left = n
+            val scratch = ByteArray(64 * 1024)
+            while (left > 0) {
+                val s = input.skip(left)
+                if (s > 0) { left -= s; continue }
+                val r = input.read(scratch, 0, minOf(scratch.size.toLong(), left).toInt())
+                if (r < 0) throw IOException("range beyond end")
+                left -= r
+            }
+        }
+
         fun js(s: String): String {
             val sb = StringBuilder("\"")
             for (c in s) when {

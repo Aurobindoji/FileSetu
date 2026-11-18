@@ -19,8 +19,8 @@ android {
         applicationId = "app.filesetu"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.2.1"
     }
 
     signingConfigs {
@@ -73,5 +73,6 @@ dependencies {
     val ktor = "3.2.3"
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-cio:$ktor")
+    implementation("io.ktor:ktor-server-auto-head-response:$ktor")
     implementation("org.slf4j:slf4j-nop:2.0.17")
 }

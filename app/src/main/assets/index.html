@@ -67,7 +67,7 @@
   </section>
 
   <section class="card">
-    <div class="head"><h2 data-t="fromPhone"></h2><a id="zip" class="btn ghost hidden" href="/api/zip" data-t="zipAll"></a></div>
+    <div class="head"><h2 data-t="fromPhone"></h2><a id="zip" class="btn ghost hidden" href="/api/zip/FileSetu.zip" data-t="zipAll"></a></div>
     <div id="outbox"></div>
     <h2 style="margin-top:22px" data-t="sentToPhone"></h2>
     <div id="received"></div>
@@ -177,7 +177,7 @@ async function refresh() {
 function render(s) {
   $("#outbox").innerHTML = s.outbox.length ? s.outbox.map(f =>
     `<div class="row"><div class="name" title="${esc(f.name)}">${esc(f.name)}<div class="sub">${fmt(f.size)}</div></div>
-     <a class="btn" href="/api/file/${encodeURIComponent(f.id)}" download>${T("download")}</a></div>`).join("")
+     <a class="btn" href="/api/file/${encodeURIComponent(f.id)}/${encodeURIComponent(f.name)}" download="${esc(f.name)}">${T("download")}</a></div>`).join("")
     : `<div class="empty">${T("noOutbox")}</div>`;
   $("#zip").classList.toggle("hidden", s.outbox.length < 2);
   $("#received").innerHTML = s.received.length ? s.received.map(f =>
