@@ -107,7 +107,7 @@ class TransferServer(private val ctx: Context) {
                 val device = js("${Build.MANUFACTURER} ${Build.MODEL}")
                 call.response.header(HttpHeaders.CacheControl, "no-store")
                 call.respondText(
-                    """{"device":$device,"idleMinutes":${Store.IDLE_MINUTES},"outbox":[$out],"received":[$rec],"notes":[$notes]}""",
+                    """{"device":$device,"version":"${BuildConfig.VERSION_NAME}","idleMinutes":${Store.IDLE_MINUTES},"outbox":[$out],"received":[$rec],"notes":[$notes]}""",
                     ContentType.Application.Json
                 )
             }

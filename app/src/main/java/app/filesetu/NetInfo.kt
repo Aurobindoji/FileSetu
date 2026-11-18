@@ -7,7 +7,7 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 
 /** One address the PC can open. [kind] is shown to the user (Hotspot / Wi-Fi / USB). */
-data class Addr(val kind: String, val ip: String)
+data class Addr(val kind: String, val ip: String, val iface: String = "")
 
 private val skipPrefixes = listOf("lo", "rmnet", "ccmni", "dummy", "tun", "p2p", "v4-", "ifb", "sit", "ip6")
 
@@ -27,7 +27,7 @@ fun localAddresses(ctx: Context): List<Addr> {
         for (a in ni.inetAddresses.toList()) {
             if (a !is Inet4Address || a.isLoopbackAddress || a.isLinkLocalAddress) continue
             val ip = a.hostAddress ?: continue
-            out += Addr(kindOf(name, wifiClient), ip)
+            out += Addr(kindOf(name, wifiClient), ip, name)
         }
     }
     val order = listOf("Hotspot", "USB", "Wi-Fi", "नेटवर्क")

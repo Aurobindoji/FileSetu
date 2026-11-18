@@ -198,7 +198,11 @@ class MainActivity : ComponentActivity() {
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("FileSetu", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text("FileSetu", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            Text("  v${BuildConfig.VERSION_NAME}", fontSize = 12.sp, color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp))
+                        }
                         Text(t("PC ↔ मोबाइल फ़ाइल ट्रांसफ़र — बिना internet", "PC ↔ phone file transfer — no internet"),
                             fontSize = 14.sp, color = Color.Gray)
                     }
@@ -236,12 +240,15 @@ class MainActivity : ComponentActivity() {
                                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                             )
                                             Spacer(Modifier.padding(4.dp))
-                                            Text(
-                                                "http://${a.ip}:$port",
-                                                fontSize = 21.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = FontFamily.Monospace,
-                                            )
+                                            Column {
+                                                Text(
+                                                    "http://${a.ip}:$port",
+                                                    fontSize = 21.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontFamily = FontFamily.Monospace,
+                                                )
+                                                Text(a.iface, fontSize = 10.sp, color = Color.Gray)
+                                            }
                                         }
                                     }
                                 }
@@ -386,7 +393,11 @@ class MainActivity : ComponentActivity() {
                 }
                 HorizontalDivider()
             }
-            item { Spacer(Modifier.height(24.dp)) }
+            item {
+                Text("FileSetu v${BuildConfig.VERSION_NAME}", fontSize = 11.sp, color = Color.Gray,
+                    modifier = Modifier.padding(top = 12.dp))
+                Spacer(Modifier.height(24.dp))
+            }
         }
     }
 }
