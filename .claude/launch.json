@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "page-mock", "runtimeExecutable": "python", "runtimeArgs": ["tools/mock_server.py"], "port": 8765 }
+  ]
+}
